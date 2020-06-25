@@ -2,9 +2,11 @@ import csv, json, sys, redis, os
 import FinanceDataReader as fdr
 import pandas as pd
 from datetime import datetime
+from slacker import Slacker
 
 from sensitives import SENSITIVES
 
+slack = Slacker(SENSITIVES['slack_token'])
 r = redis.Redis(host=SENSITIVES['redis_ip'], port=6379, password=SENSITIVES['redis_pw'])
 
 bm_symbols = [
@@ -164,9 +166,11 @@ def keyst_cache_index_factors():
     redis_res = r.set('KeystIndexFactors', json_data)
 
 # tasks
+slack.chat.post_message('#blended-keystone-data', 'Keystone 신흥국 지표 task 시작')
 keyst_update_data()
 keyst_update_bm()
 keyst_make_index()
 keyst_cache_index()
 keyst_scale_cache_index()
 keyst_cache_index_factors()
+slack.chat.post_message('#blended-keystone-data', 'Keystone 신흥국 지표 task 완료')
